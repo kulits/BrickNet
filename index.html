@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BrickNet</title>
+<style>
+  :root {
+    --ink: #222;
+    --ink-2: #333;
+    --muted: #666;
+    --rule: #ddd;
+    --link: #1a4fbf;
+    --link-hover: #c0392b;
+    --bg: #fff;
+    --check: #2c8a3a;
+    --xmark: #c0392b;
+  }
+  html, body { background: var(--bg); color: var(--ink); }
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 22px 60px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 8px 0 18px;
+  }
+  .authors { text-align: center; font-size: 19px; margin-bottom: 4px; }
+  .authors sup { font-size: 11px; }
+  .affils { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .affils sup { font-size: 10px; }
+  .venue { text-align: center; margin: 8px 0 18px; }
+  .venue img { width: 180px; height: auto; }
+
+  .buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 14px 0 26px;
+    font-size: 14px;
+  }
+  .buttons a, .buttons .disabled {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #333;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    transition: transform 0.2s;
+  }
+  .buttons a:hover { color: #fff; transform: scale(1.05); }
+  .buttons a img, .buttons .disabled img { width: 18px; height: 18px; vertical-align: middle; filter: invert(1); }
+  .buttons .disabled { background: #636363; cursor: not-allowed; }
+  .buttons .disabled:hover { transform: none; }
+
+  figure { margin: 0; }
+  figure img { width: 100%; height: auto; display: block; }
+  figcaption {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    line-height: 1.5;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .cap-justified {
+    text-align: justify;
+    text-align-last: left;
+  }
+
+  h2 { font-size: 20px; font-weight: 700; margin: 30px 0 8px; }
+  h3 { font-size: 16px; font-weight: 700; margin: 18px 0 6px; }
+  p { margin: 0 0 14px; }
+  a { color: var(--link); }
+  a:hover { color: var(--link-hover); }
+
+  /* Subfigure rows used throughout */
+  .row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  .row > figure { flex: 1 1 0; min-width: 0; }
+  .row > figure img { width: 100%; height: auto; }
+
+  /* Dragonfly row matches the LaTeX 40 / 58 split */
+  .dragonfly-row { display: flex; gap: 6px; align-items: flex-end; }
+  .dragonfly-row .down { flex: 0 0 40%; }
+  .dragonfly-row .side { flex: 0 0 58%; position: relative; }
+  .dragonfly-row img { width: 100%; height: auto; display: block; }
+  .dragonfly-row .side svg.arrows {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  /* Connectors */
+  .connectors-figure { margin: 0; }
+  .connectors-labels {
+    display: grid;
+    grid-template-columns: 19% 19.6% 19.6% 19.6% 19% ;
+    gap: 0;
+    justify-content: space-between;
+    font-size: 13.5px;
+    text-align: center;
+    margin-top: 6px;
+  }
+  .connectors-labels span { font-weight: 600; }
+
+  /* Graph viz: object | path | sequence side-by-side */
+  .graph-figure {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.6fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .graph-figure figure { display: flex; flex-direction: column; }
+  .graph-figure figure img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    background: #fff;
+  }
+  .graph-figure figure figcaption { margin-top: 6px; }
+  .df-lbl {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #000;
+    line-height: 1;
+    pointer-events: none;
+    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+  }
+  @media (max-width: 720px) {
+    .df-lbl { font-size: 12px; }
+  }
+  .graph-figure .seq-col { display: flex; flex-direction: column; min-width: 0; align-self: start; }
+  .graph-figure .seq-wrap {
+    border: 1px solid var(--rule);
+    background: #fafafa;
+    padding: 10px 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    white-space: nowrap;
+    overflow-x: auto;
+    flex: 0 0 auto;
+  }
+  @media (max-width: 640px) {
+    .graph-figure { grid-template-columns: 1fr 1fr; }
+    .graph-figure .seq-col { grid-column: 1 / -1; }
+  }
+  .graph-figure .seq-wrap .seq-table {
+    display: grid;
+    grid-template-columns: 6px 1fr;
+    grid-auto-rows: min-content;
+    column-gap: 2px;
+    align-items: stretch;
+    align-content: start;
+  }
+  .graph-figure .seq-wrap .seq-bracket-cell {
+    margin: 1px 0;
+    border: 1px solid #222;
+    border-right: none;
+    width: 5px;
+    align-self: stretch;
+  }
+  .graph-figure .seq-wrap .seq-row {
+    grid-column: 2;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .graph-figure .seq-wrap .seq-row .dot {
+    display: inline-block;
+    width: 9px; height: 9px; border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .graph-figure .seq-wrap .seq-row.dots {
+    color: var(--muted);
+    letter-spacing: 0.35em;
+    padding-left: 4px;
+  }
+
+  /* "Side-by-side" responsive: stack on small screens */
+  @media (max-width: 640px) {
+    .row { flex-direction: column; }
+    .row > figure { flex: 1 1 100%; }
+    .dragonfly-row .down,
+    .dragonfly-row .side { flex: 1 1 100%; }
+    .graph-figure { grid-template-columns: 1fr; }
+  }
+
+  /* Dataset table */
+  .tbl-wrap { overflow-x: auto; margin: 8px 0 18px; }
+  table.dset {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  table.dset th, table.dset td {
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--rule);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  table.dset th:first-child, table.dset td:first-child { text-align: left; }
+  table.dset th:nth-child(4), table.dset td:nth-child(4),
+  table.dset th:nth-child(5), table.dset td:nth-child(5),
+  table.dset th:nth-child(6), table.dset td:nth-child(6) { text-align: center; }
+  table.dset thead th { border-bottom: 2px solid #888; font-weight: 700; }
+  table.dset tbody tr:last-child td { border-bottom: 2px solid #888; }
+  .check { color: var(--check); font-weight: 700; }
+  .xmark { color: var(--xmark); font-weight: 700; }
+
+  /* Unconditional samples — scale to fit */
+  .uncond-block { margin-top: 6px; }
+  .uncond-row { margin: 6px 0 12px; }
+  .uncond-row img { width: 100%; height: auto; display: block; }
+  .uncond-cap {
+    font-size: 13.5px;
+    color: var(--ink-2);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  /* Conditional samples — 4×4 grid; each cell = one full column of source mosaic */
+  .cond-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px 12px;
+    margin: 8px 0 14px;
+  }
+  @media (max-width: 560px) {
+    .cond-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .cond-cell { background: #fff; }
+  .cond-cell summary { list-style: none; cursor: pointer; }
+  .cond-cell summary::-webkit-details-marker { display: none; }
+  .cond-cell[open] .pill { background: #111; color: #fff; border-color: #111; }
+  .cond-expand { display: none; }
+  .cond-grid:has(#cc-1[open]) > .exp-1,
+  .cond-grid:has(#cc-2[open]) > .exp-2,
+  .cond-grid:has(#cc-3[open]) > .exp-3,
+  .cond-grid:has(#cc-4[open]) > .exp-4,
+  .cond-grid:has(#cc-5[open]) > .exp-5,
+  .cond-grid:has(#cc-6[open]) > .exp-6,
+  .cond-grid:has(#cc-7[open]) > .exp-7,
+  .cond-grid:has(#cc-8[open]) > .exp-8,
+  .cond-grid:has(#cc-9[open]) > .exp-9,
+  .cond-grid:has(#cc-10[open]) > .exp-10,
+  .cond-grid:has(#cc-11[open]) > .exp-11,
+  .cond-grid:has(#cc-12[open]) > .exp-12,
+  .cond-grid:has(#cc-13[open]) > .exp-13,
+  .cond-grid:has(#cc-14[open]) > .exp-14,
+  .cond-grid:has(#cc-15[open]) > .exp-15,
+  .cond-grid:has(#cc-16[open]) > .exp-16 { display: block; }
+  .cond-cell .pill-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .cond-cell .pill {
+    background: #fff;
+    border: 1px solid #888;
+    border-radius: 3px;
+    color: #111;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 6px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    flex: 0 0 auto;
+  }
+  .cond-cell .preview {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.35;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .cond-cell .tile {
+    width: 100%;
+    aspect-ratio: 512 / 918;
+    background-repeat: no-repeat;
+    background-size: 800% 100%;
+    border: 1px solid var(--rule);
+  }
+  .cond-cell:hover .tile { outline: 1px solid #888; }
+  .cond-expand {
+    grid-column: 1 / -1;
+    border-left: 2px solid #111;
+    padding: 8px 0 8px 12px;
+    margin: -2px 0 4px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .cond-expand .lab {
+    font-weight: 700;
+    margin-right: 0.4em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Paper section */
+  .paper-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    margin-top: 8px;
+  }
+  @media (max-width: 640px) { .paper-row { grid-template-columns: 1fr; } }
+  .paper-thumb {
+    display: block;
+    text-decoration: none;
+  }
+  .paper-thumb img { width: 100%; height: auto; display: block; }
+  .paper-thumb:hover { opacity: 0.85; }
+  .paper-row > div { min-width: 0; }
+  .paper-row > div > h3:first-child { margin-top: 0; }
+  .paper-row p { text-align: justify; }
+  pre.bib {
+    background: #fafafa;
+    border: 1px solid var(--rule);
+    padding: 12px 14px;
+    font-size: 12.5px;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 8px 0;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    margin-top: 50px;
+    padding: 16px 0 26px;
+    text-align: center;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<main>
+
+  <h1>BrickNet: Graph-Backed Generative Brick Assembly</h1>
+
+  <div class="authors">
+    <a href="https://kulits.github.io" target="_blank" rel="noopener">Peter Kulits</a><sup>1,2</sup>&nbsp;&nbsp;<a href="https://cordeliaschmid.github.io/" target="_blank" rel="noopener">Cordelia Schmid</a><sup>1</sup>
+  </div>
+  <div class="affils">
+    <sup>1</sup>Inria, École Normale Supérieure, CNRS, PSL Research University&nbsp;&nbsp;
+    <sup>2</sup>Max Planck Institute for Intelligent Systems, Tübingen
+  </div>
+  <div class="venue"><img src="assets/cvpr-logo.svg" alt="CVPR 2026" /></div>
+
+  <div class="buttons">
+    <a href="#" target="_blank" rel="noopener">
+      <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/arxiv.svg" alt=""/>arXiv
+    </a>
+    <!--
+    <a href="#" target="_blank" rel="noopener">
+      <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/22abc79596bf9074d073de4b19c5862f4c0bd5ee/icons/googledocs.svg" alt=""/>Paper
+    </a>
+    -->
+    <a href="https://github.com/kulits/BrickNet" target="_blank" rel="noopener">
+      <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg" alt=""/>Code
+    </a>
+    <span class="disabled" title="To be released by the end of May">
+      <img src="https://raw.githubusercontent.com/simple-icons/simple-icons/22abc79596bf9074d073de4b19c5862f4c0bd5ee/icons/googledocs.svg" alt=""/>Dataset (released by end of May)
+    </span>
+  </div>
+
+  <figure>
+    <img src="assets/teaser_mosaic.jpg" alt="BrickNet teaser mosaic" />
+    <figcaption class="cap-justified">
+      <b>Figure 1.</b>
+      We finetune an LLM to autoregressively generate LEGO-brick build sequences.
+      To enable this, we introduce a large-scale dataset of LDraw structures composed of parts (samples above),
+      as well as a novel graph-backed parametrization to represent arbitrary objects.
+    </figcaption>
+  </figure>
+
+  <h2>Motivation</h2>
+
+  <div class="row">
+    <figure>
+      <img src="assets/trio.jpg" alt="BrickGPT samples" />
+      <figcaption>(a) BrickGPT Samples</figcaption>
+    </figure>
+    <figure>
+      <div class="dragonfly-row">
+        <div class="down">
+          <img src="assets/dragonfly_down.jpg" alt="Dragonfly top view" />
+        </div>
+        <div class="side">
+          <img src="assets/dragonfly_side.jpg" alt="Dragonfly side view" />
+          <!-- Arrows: SVG stretched to image bounds (anisotropic OK for lines) -->
+          <svg class="arrows" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 z" fill="#000"/>
+              </marker>
+            </defs>
+            <line x1="53" y1="52" x2="48.72" y2="63.75" stroke="#000" stroke-width="0.6" vector-effect="non-scaling-stroke" marker-end="url(#ah)"/>
+            <line x1="75" y1="21" x2="82.93" y2="25.04" stroke="#000" stroke-width="0.6" vector-effect="non-scaling-stroke" marker-end="url(#ah)"/>
+          </svg>
+          <div class="df-lbl" style="left:54.50%; top:47.89%;">1</div>
+          <div class="df-lbl" style="left:72.22%; top:19.59%;">5</div>
+        </div>
+      </div>
+      <figcaption>(b) Human-Designed Sample</figcaption>
+    </figure>
+  </div>
+
+  <p style="margin-top:14px;">
+    To teach a model to autoregressively generate brick structures in a discrete, voxelized domain,
+    it is intuitive to train it to regress 3D coordinates (a), as in <a href="https://avalovelace1.github.io/BrickGPT/" target="_blank" rel="noopener">BrickGPT (Pun et al., 2025)</a>.
+    However, doing so becomes more difficult when dealing with the complexities of real-world objects (b).
+    Starting at the orange hinge plate (1) and placing bricks down to the white stud (5) at the end
+    requires maintaining a high degree of numerical precision across steps.
+  </p>
+
+  <h2>Connectivity Semantics</h2>
+
+  <figure class="connectors-figure">
+    <img src="assets/connectors.jpg" alt="Five connector types" />
+    <figcaption>
+      <div class="connectors-labels">
+        <span>(a) Stud</span>
+        <span>(b) Hinge</span>
+        <span>(c) Axle</span>
+        <span>(d) Ball</span>
+        <span>(e) Fixed</span>
+      </div>
+    </figcaption>
+  </figure>
+
+  <p style="margin-top:14px;">
+    We broadly model five types of connectivity between bricks.
+    Stud (a) connections, after defining which stud connects to which hole, have at most one degree of freedom.
+    Hinge (b) connections have a degree of rotational freedom, and often the ability to be flipped (binary).
+    Axle (c) connections inherit the same freedom as hinges, but can also be offset along their principal axis.
+    Ball (d) connections have three degrees of rotational freedom.
+    Fixed (e) connections have no degrees of freedom.
+  </p>
+
+  <h2>Graph Visualization</h2>
+
+  <div class="graph-figure">
+    <figure><img src="assets/truck_object.jpg" alt="Truck object render" /><figcaption>(a) Object</figcaption></figure>
+    <figure><img src="assets/truck_path.jpg" alt="Truck path-colored render" /><figcaption>(b) Path-Colored</figcaption></figure>
+    <div class="seq-col">
+      <div class="seq-wrap"><div class="seq-table">
+        <div class="seq-bracket-cell" style="grid-column:1;grid-row:1"></div>
+        <div class="seq-row" style="grid-column:2;grid-row:1"><span class="dot" style="background:#E47773"></span><span>a plate 1x2 | purple</span></div>
+        <div class="seq-bracket-cell" style="grid-column:1;grid-row:2/span 2"></div>
+        <div class="seq-row" style="grid-column:2;grid-row:2"><span class="dot" style="background:#AB5142"></span><span>b brick 1x2 | purple</span></div>
+        <div class="seq-row" style="grid-column:2;grid-row:3"><span class="dot" style="background:#E47773"></span><span>a stud hole b stud b 90</span></div>
+        <div class="seq-bracket-cell" style="grid-column:1;grid-row:4/span 2"></div>
+        <div class="seq-row" style="grid-column:2;grid-row:4"><span class="dot" style="background:#F6AD73"></span><span>c brick 1x2 | purple</span></div>
+        <div class="seq-row" style="grid-column:2;grid-row:5"><span class="dot" style="background:#AB5142"></span><span>a stud hole a stud b 90</span></div>
+        <div class="seq-row dots" style="grid-column:2;grid-row:6">&middot; &middot; &middot;</div>
+        <div class="seq-bracket-cell" style="grid-column:1;grid-row:7/span 2"></div>
+        <div class="seq-row" style="grid-column:2;grid-row:7"><span class="dot" style="background:#96D9F4"></span><span>z plate 2x2 wheels holder | purple</span></div>
+        <div class="seq-row" style="grid-column:2;grid-row:8"><span class="dot" style="background:#86E7CD"></span><span>w stud hole d stud b 90</span></div>
+        <div class="seq-row dots" style="grid-column:2;grid-row:9">&middot; &middot; &middot;</div>
+        <div class="seq-bracket-cell" style="grid-column:1;grid-row:10/span 2"></div>
+        <div class="seq-row" style="grid-column:2;grid-row:10"><span class="dot" style="background:#8DA8E5"></span><span>ac wheel rim 6.4x8 | light grey</span></div>
+        <div class="seq-row" style="grid-column:2;grid-row:11"><span class="dot" style="background:#96D9F4"></span><span>z axle bar b clip a flip 270 0</span></div>
+        <div class="seq-row dots" style="grid-column:2;grid-row:12">&middot; &middot; &middot;</div>
+        <div class="seq-bracket-cell" style="grid-column:1;grid-row:13/span 2"></div>
+        <div class="seq-row" style="grid-column:2;grid-row:13"><span class="dot" style="background:#6C4E7A"></span><span>ah tyre 6 50x8 | black</span></div>
+        <div class="seq-row" style="grid-column:2;grid-row:14"><span class="dot" style="background:#8DA8E5"></span><span>ac fixed e in b a</span></div>
+      </div></div>
+      <figcaption>(c) Build Sequence</figcaption>
+    </div>
+  </div>
+
+  <p style="margin-top:14px;">
+    After encoding relative transformations between parts into their connectivity, we arrive at connected graphs.
+    From these graphs, we can sample iterative build instructions (spanning trees), that begin at a root part,
+    add another part, define an edge that connects that part with the existing structure, and on.
+    For example, see the dark red piece at the top of the render in (b).
+    This corresponds to part 0 in the graph, the root node.
+    From that, it has two neighbors, both <code>brick 1x2</code>, which are added to the structure.
+    Each bracketed item corresponds to a discrete placement &ldquo;action.&rdquo;
+  </p>
+
+  <h2>Dataset Statistics</h2>
+
+  <p>
+    We present BrickNet, a large-scale dataset of brick structures.
+    In contrast to the voxelized <a href="https://avalovelace1.github.io/BrickGPT/" target="_blank" rel="noopener">BrickGPT (Pun et al., 2025)</a>, our samples include thousands of distinct part types.
+    Relative to the <a href="https://omr.ldraw.org/" target="_blank" rel="noopener">Official Model Repository (OMR)</a> data used in <a href="https://github.com/aaronwalsman/ltron" target="_blank" rel="noopener"><i>Break and Make</i> (Walsman et al., 2022)</a>, our set is much broader.
+  </p>
+
+  <div class="tbl-wrap">
+    <table class="dset">
+      <thead>
+        <tr><th>Dataset</th><th>Samples</th><th>Parts</th><th>Color</th><th>Captions</th><th>Real</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>BrickGPT</td><td>28,259</td><td>8</td><td><span class="xmark">✗</span></td><td><span class="check">✓</span></td><td><span class="xmark">✗</span></td></tr>
+        <tr><td><a href="https://omr.ldraw.org/" target="_blank" rel="noopener">OMR</a></td><td>1,814</td><td>5,005</td><td><span class="check">✓</span></td><td><span class="xmark">✗</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>BrickNet-PT</td><td>320,808</td><td>9,743</td><td><span class="check">✓</span></td><td><span class="xmark">✗</span></td><td><span class="check">✓</span></td></tr>
+        <tr><td>BrickNet-SFT</td><td>67,185</td><td>6,457</td><td><span class="check">✓</span></td><td><span class="check">✓</span></td><td><span class="check">✓</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Unconditional Samples</h2>
+
+  <div class="uncond-block">
+    <div class="uncond-row">
+      <div class="uncond-cap">(a) <a href="https://github.com/joonahn/BrECS" target="_blank" rel="noopener">BrECS (Ahn et al., 2024)</a></div>
+      <img src="assets/uncond_brecs.jpg" alt="BrECS unconditional samples" loading="lazy" />
+    </div>
+    <div class="uncond-row">
+      <div class="uncond-cap">(b) Ours</div>
+      <img src="assets/uncond_ours.jpg" alt="Our unconditional samples" loading="lazy" />
+    </div>
+  </div>
+
+  <p style="margin-top:6px;">
+    Random samples drawn from either <a href="https://github.com/joonahn/BrECS" target="_blank" rel="noopener">BrECS (Ahn et al., 2024)</a> (a) or our model (b).
+  </p>
+
+  <h2>Text-Conditioned Samples</h2>
+
+  <p>
+    Samples produced using prompts from the evaluation set.
+    Within each pair, our outputs are above and those of <a href="https://avalovelace1.github.io/BrickGPT/" target="_blank" rel="noopener">BrickGPT (Pun et al., 2025)</a> are beneath.
+    Click any cell to read its full prompt.
+  </p>
+
+  <div class="cond-grid">
+    <details name="cond" id="cc-1" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:0% 0%"></div>
+      <div class="pill-row"><span class="pill">1</span><span class="preview">This is a LEGO model of a stylized, light-green bamboo stalk with leaves...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-2" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:14.2857% 0%"></div>
+      <div class="pill-row"><span class="pill">2</span><span class="preview">This LEGO model depicts a small, gray stone shrine or altar...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-3" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:28.5714% 0%"></div>
+      <div class="pill-row"><span class="pill">3</span><span class="preview">This is a LEGO model of a white and grey handheld device...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-4" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:42.8571% 0%"></div>
+      <div class="pill-row"><span class="pill">4</span><span class="preview">This is a LEGO model of a traditional black and gold rickshaw...</span></div>
+    </summary></details>
+    <div class="cond-expand exp-1"><span class="lab">1.</span> This is a LEGO model of a stylized, light-green bamboo stalk with leaves, constructed from cylindrical bricks and leaf elements, mounted on a circular white base.</div>
+    <div class="cond-expand exp-2"><span class="lab">2.</span> This LEGO model depicts a small, gray stone shrine or altar, featuring an archway topped with two torches, a central pedestal holding a red gem, and various accessories including a green plant, a white urn, and a black fixture.</div>
+    <div class="cond-expand exp-3"><span class="lab">3.</span> This is a LEGO model of a white and grey handheld device, possibly a scanner or medical tool, featuring a blue transparent element and a silver cylindrical piece at its front.</div>
+    <div class="cond-expand exp-4"><span class="lab">4.</span> This is a LEGO model of a traditional black and gold rickshaw, featuring two large spoked wheels, a covered passenger seat with beige upholstery, and long pulling handles at the front.</div>
+
+    <details name="cond" id="cc-5" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:57.1429% 0%"></div>
+      <div class="pill-row"><span class="pill">5</span><span class="preview">This is a LEGO model of a rectangular, dark red gift box...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-6" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:71.4286% 0%"></div>
+      <div class="pill-row"><span class="pill">6</span><span class="preview">This LEGO minifigure features vibrant red hair...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-7" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:85.7143% 0%"></div>
+      <div class="pill-row"><span class="pill">7</span><span class="preview">This is a blue LEGO sports car model...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-8" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_b.jpg);background-position:100% 0%"></div>
+      <div class="pill-row"><span class="pill">8</span><span class="preview">This is a detailed LEGO model of a black espresso machine...</span></div>
+    </summary></details>
+    <div class="cond-expand exp-5"><span class="lab">5.</span> This is a LEGO model of a rectangular, dark red gift box, decorated with a lighter red ribbon and bow on top, and featuring a black winding key on its side, indicating it is a music box.</div>
+    <div class="cond-expand exp-6"><span class="lab">6.</span> This LEGO minifigure features vibrant red hair, a white torso printed with a silver scale-mail vest, and solid blue legs.</div>
+    <div class="cond-expand exp-7"><span class="lab">7.</span> This is a blue LEGO sports car model, featuring a prominent rear spoiler, grey wheels, and transparent windows, shown from multiple angles.</div>
+    <div class="cond-expand exp-8"><span class="lab">8.</span> This is a detailed LEGO model of a black espresso machine, featuring a transparent bean hopper on top, a side-mounted water reservoir, a front-facing portafilter and steam wand, and a pressure gauge.</div>
+
+    <details name="cond" id="cc-9" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:0% 0%"></div>
+      <div class="pill-row"><span class="pill">9</span><span class="preview">This LEGO model features a minifigure in a red torso and Santa hat...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-10" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:14.2857% 0%"></div>
+      <div class="pill-row"><span class="pill">10</span><span class="preview">This LEGO model is a rectangular patch of dark green grass...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-11" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:28.5714% 0%"></div>
+      <div class="pill-row"><span class="pill">11</span><span class="preview">This is a LEGO model of a large, cylindrical purple container or barrel...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-12" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:42.8571% 0%"></div>
+      <div class="pill-row"><span class="pill">12</span><span class="preview">This is a simple, abstract LEGO vehicle constructed from primary-colored bricks...</span></div>
+    </summary></details>
+    <div class="cond-expand exp-9"><span class="lab">9.</span> This LEGO model features a minifigure in a red torso and Santa hat, holding a large, stylized green Christmas tree made of stacked, angled pieces.</div>
+    <div class="cond-expand exp-10"><span class="lab">10.</span> This LEGO model is a rectangular patch of dark green grass, constructed from numerous plant stem pieces on a black plate with a brown base, featuring a black Technic axle protruding from one end for connection.</div>
+    <div class="cond-expand exp-11"><span class="lab">11.</span> This is a LEGO model of a large, cylindrical purple container or barrel, reinforced with tan bands and featuring various grey mechanical attachments, including handles, levers, and what appear to be nozzles or connectors.</div>
+    <div class="cond-expand exp-12"><span class="lab">12.</span> This is a simple, abstract LEGO vehicle constructed from primary-colored bricks&mdash;blue, red, yellow, and black&mdash;and equipped with four red wheels.</div>
+
+    <details name="cond" id="cc-13" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:57.1429% 0%"></div>
+      <div class="pill-row"><span class="pill">13</span><span class="preview">This LEGO model is a colorful, low-profile bed...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-14" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:71.4286% 0%"></div>
+      <div class="pill-row"><span class="pill">14</span><span class="preview">This is a 3D digital model of a stylized, blocky LEGO vehicle...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-15" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:85.7143% 0%"></div>
+      <div class="pill-row"><span class="pill">15</span><span class="preview">This is a LEGO model of a black squirrel...</span></div>
+    </summary></details>
+    <details name="cond" id="cc-16" class="cond-cell"><summary>
+      <div class="tile" style="background-image:url(assets/cond_grid_a.jpg);background-position:100% 0%"></div>
+      <div class="pill-row"><span class="pill">16</span><span class="preview">This LEGO model depicts a dilapidated, single-room shelter or bunker...</span></div>
+    </summary></details>
+    <div class="cond-expand exp-13"><span class="lab">13.</span> This LEGO model is a colorful, low-profile bed constructed from a yellow base and a top layer of multicolored rectangular bricks, featuring a light blue wedge piece at one end to serve as a headboard.</div>
+    <div class="cond-expand exp-14"><span class="lab">14.</span> This is a 3D digital model of a stylized, blocky LEGO vehicle, resembling a futuristic truck or armored van, shown from multiple angles to display its gray, white, and light blue construction with prominent black wheels.</div>
+    <div class="cond-expand exp-15"><span class="lab">15.</span> This is a LEGO model of a black squirrel, constructed with dark grey and light grey bricks, featuring a large bushy tail, prominent white eyes, and holding two small, round objects in its paws.</div>
+    <div class="cond-expand exp-16"><span class="lab">16.</span> This LEGO model depicts a dilapidated, single-room shelter or bunker with crumbling brown and tan walls, containing a simple bed, a rifle, a sack, and a small cache of money.</div>
+  </div>
+
+  <h2 id="paper">Paper</h2>
+  <div class="paper-row">
+    <a class="paper-thumb" href="#" target="_blank" rel="noopener"><img src="assets/paper_thumb.jpg" alt="Paper thumbnail" /></a>
+    <div>
+      <h3>Abstract</h3>
+      <p>
+        We train a language model to generate LEGO®-brick build sequences. While prior work has been
+        restricted to discrete, voxel-like towers, we consider a much broader set of pieces, encompassing
+        thousands of part types with diverse connection semantics. To enable this, we first collect a
+        large-scale dataset of over 100,000 human-designed LDraw brick objects and scenes. The complexity
+        of our setting makes it challenging to autoregressively assemble structures that satisfy physical
+        constraints. When predicting block pose directly, build sequences quickly become invalid after a
+        small number of steps. Although pieces are placed in 3D space, it is the spatial relationships of
+        the parts which define the whole. With this in mind, we design a graph-based program representation
+        that parametrizes structure through connectivity, improving the physical grounding of generated
+        sequences. To enable future applications, we make our dataset and models available for research purposes.
+      </p>
+    </div>
+  </div>
+  <h3>BibTeX</h3>
+<pre class="bib">@inproceedings{kulits2026bricknet,
+  title     = {{BrickNet}: Graph-Backed Generative Brick Assembly},
+  author    = {Kulits, Peter and Schmid, Cordelia},
+  booktitle = {CVPR},
+  month     = {June},
+  year      = {2026},
+}</pre>
+</main>
+
+
+</body>
+</html>
