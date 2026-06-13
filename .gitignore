@@ -1,0 +1,7 @@
+__pycache__/
+data/inset.tar.xz
+data/inset
+data/ldraw.tar.xz
+.coverage
+coverage.html
+dist/

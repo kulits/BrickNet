@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bricknet"
+version = "0.1.0"
+description = "Accompanying module to BrickNet"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [{ name = "Peter Kulits" }]
+dependencies = [
+    "numpy",
+    "scipy",
+    "meshlib",
+    "platformdirs",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Paper = "https://kulits.github.io/BrickNet/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bricknet"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/bricknet", "README.md", "LICENSE", "pyproject.toml"]
+
+[tool.black]
+line-length = 120
