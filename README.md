@@ -107,6 +107,16 @@ meshes are downloaded separately (see [Install](#install)). The datasets (graphs
 paths) are distributed via a [request form](https://forms.gle/dm4eYSa5gh4DqzRT6); see
 [DATA.md](DATA.md) for schemas.
 
+## Rendering
+
+Rendering code is distributed separately in [BrickNet-Render](https://github.com/kulits/BrickNet-Render).
+
+```bash
+pip install bricknet-render "bpy>=5.1"
+python -m bricknet_render fetch-glbs
+bricknet-render model.ldr out/views --views 8
+```
+
 ## Conversions
 
 ```mermaid
