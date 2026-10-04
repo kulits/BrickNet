@@ -12,13 +12,31 @@ CVPR 2026
 
 </div>
 
+## Updates
+
+### 26-10-01 -- Convex Colliders
+
+Collision checking now uses convex decompositions and Bullet penetration depths with a 1-LDU overlap allowance,
+replacing triangle-intersection checks on pre-inset meshes. The new checker is strongly recommended for new work. To
+reproduce the original BrickNet numbers, use v0.1.0.
+
+The new colliders cover 14,442 of the 14,583 catalog parts (99.0%). The API is unchanged. Follow the install commands.
+
+The non-decomposed watertight meshes can be separately downloaded at [watertight.tar.xz](https://keeper.mpdl.mpg.de/seafhttp/f/3e2114dadb1f4135933d/?op=view) (80.8 MiB).
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/kulits/BrickNet/master/docs/images/collider_catalog.avif" width="100%">
+
+</div>
+
 ## Install
 
 ```bash
 pip install bricknet
 ```
 
-Collision checking requires the per-part collision meshes (1.6 GB extracted):
+Collision checking requires the preprocessed per-part convex colliders (191 MiB download, 989 MiB extracted):
 
 ```bash
 python -m bricknet fetch-meshes

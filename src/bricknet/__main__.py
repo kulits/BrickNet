@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-INSET_URL = "https://keeper.mpdl.mpg.de/seafhttp/f/77b868746e6d41baa791/?op=view"
+COLLIDER_URL = "https://keeper.mpdl.mpg.de/seafhttp/f/24c17eb2d4d14c7ebd41/?op=view"
 
 
 def _read(path):
@@ -82,8 +82,10 @@ def _cmd_sample(args):
     import json
 
     from . import graph
+    from .collision import _collider_files, data_dir
     from .tree import serialize_tree
 
+    _collider_files(data_dir() / "cvx")
     src = Path(args.input)
     if src.suffix == ".npz":
         models = [(f"{src.stem}[{i}]", g) for i, g in enumerate(graph.load_graphs(src))]
@@ -131,20 +133,19 @@ def _cmd_score(args):
 
 def _cmd_fetch_meshes(args):
     import io
-    import lzma
     import tarfile
     import urllib.request
 
     from .collision import data_dir
 
-    dest = Path(args.dest) if args.dest else data_dir() / "inset"
+    dest = Path(args.dest) if args.dest else data_dir() / "cvx"
     dest.mkdir(parents=True, exist_ok=True)
-    print(f"downloading inset meshes (369 MB) -> {dest}")
-    with urllib.request.urlopen(INSET_URL) as r:
+    print(f"downloading convex colliders -> {dest}")
+    with urllib.request.urlopen(COLLIDER_URL) as r:
         buf = io.BytesIO(r.read())
-    with tarfile.open(fileobj=lzma.open(buf)) as tar:
+    with tarfile.open(fileobj=buf, mode="r:*") as tar:
         tar.extractall(dest, filter="data")
-    n = len(list(dest.glob("*.ply")))
+    n = len(list(dest.glob("*.cvx.obj")))
     print(f"extracted {n} meshes")
 
 
@@ -172,7 +173,7 @@ def main(argv=None):
     p.set_defaults(func=_cmd_score)
 
     p = sub.add_parser("fetch-meshes", help="download the collision meshes into the data dir")
-    p.add_argument("--dest", help="extract here instead of <data dir>/inset")
+    p.add_argument("--dest", help="extract here instead of <data dir>/cvx")
     p.set_defaults(func=_cmd_fetch_meshes)
 
     args = ap.parse_args(argv)

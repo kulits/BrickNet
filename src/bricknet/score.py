@@ -5,7 +5,7 @@ with three fields (re)written:
   n_actions  -- actions attempted in the text (one part per action)
   invalid    -- index of the first unparsable action, or null
   collisions -- indices of actions whose part collides under autoregressive placement
-                (null with --no-collision, which needs no meshes)
+                (null with --no-collision or when a part has no collider)
 
 Usage: python -m bricknet score in.jsonl out.jsonl [--workers N] [--no-collision]
 """
@@ -13,7 +13,6 @@ Usage: python -m bricknet score in.jsonl out.jsonl [--workers N] [--no-collision
 import argparse
 import functools
 import json
-import os
 from concurrent.futures import ProcessPoolExecutor
 
 from .collision import check_placements, first_collision
@@ -27,13 +26,13 @@ def _fixed_parents(tree: Tree) -> dict[int, int]:
     return {i + 1: e.parent for i, e in enumerate(tree.edges) if isinstance(e, FixedEdge)}
 
 
-def check_tree(tree: Tree) -> list[int]:
-    """Part indices that collide under autoregressive placement (collision.check_placements)."""
+def check_tree(tree: Tree) -> list[int] | None:
+    """Colliding part indices under autoregressive placement, or None if a collider is unavailable."""
     return check_placements([p.part_id for p in tree.parts], decode_graph(tree_to_graph(tree)), _fixed_parents(tree))
 
 
-def collision_free_prefix(tree: Tree) -> int:
-    """Length of the longest collision-free placement prefix (len(tree.parts) when clean)."""
+def collision_free_prefix(tree: Tree) -> int | None:
+    """Collision-free prefix length (len(tree.parts) when clean), or None if a collider is unavailable."""
     return first_collision([p.part_id for p in tree.parts], decode_graph(tree_to_graph(tree)), _fixed_parents(tree))
 
 
@@ -56,7 +55,6 @@ def _score_rows(rows: list[dict], collision: bool = True) -> list[dict]:
 def score_file(in_path: str, out_path: str, workers: int = 1, collision: bool = True) -> list[dict]:
     rows = [json.loads(ln) for ln in open(in_path)]
     if workers > 1:
-        os.environ["TBB_NUM_THREADS"] = "1"  # meshlib TBB pools thrash under multiprocessing
         chunks = [rows[i::workers] for i in range(workers)]
         with ProcessPoolExecutor(workers) as ex:
             scored = list(ex.map(functools.partial(_score_rows, collision=collision), chunks))

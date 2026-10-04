@@ -14,7 +14,7 @@ authors = [{ name = "Peter Kulits" }]
 dependencies = [
     "numpy",
     "scipy",
-    "meshlib",
+    "pybullet>=3.2.7",
     "platformdirs",
 ]
 classifiers = [
@@ -29,7 +29,7 @@ Paper = "https://kulits.github.io/BrickNet/"
 packages = ["src/bricknet"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/bricknet", "README.md", "LICENSE", "pyproject.toml"]
+include = ["/src/bricknet", "/README.md", "/LICENSE", "/pyproject.toml"]
 
 [tool.black]
 line-length = 120

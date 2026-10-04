@@ -477,8 +477,9 @@ def sample_collision_free_tree(
     """Random frontier walk over one component, rejecting any part that collides with the placed
     scene (fixed-edge children exempt their parent, which they intentionally overlap). Placements
     are decoded from the quantized tree edges, so the emitted tree realizes to exactly the
-    geometry that was collision-checked. The walk may cover only part of the component."""
-    from . import collision  # deferred: the meshlib import is heavy
+    geometry that was collision-checked. The walk may cover only part of the component. Parts
+    without colliders are retained with a warning."""
+    from . import collision
 
     comp, adj = _component_adjacency(graph, component)
     edges = graph.edges
