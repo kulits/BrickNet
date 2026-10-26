@@ -14,6 +14,17 @@ CVPR 2026
 
 ## Updates
 
+### 26-10-08 -- BrickBench
+
+We released [BrickBench](https://brickben.ch/) and [BrickAgent](https://github.com/kulits/BrickAgent), a benchmark and
+environment for agentic LEGO design. See full results at https://gallery.brickben.ch/
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/kulits/BrickNet/master/docs/images/brickbench_teaser.avif" width="800">
+
+</div>
+
 ### 26-10-01 -- Convex Colliders
 
 Collision checking now uses convex decompositions and Bullet penetration depths with a 1-LDU overlap allowance,
@@ -26,7 +37,7 @@ The non-decomposed watertight meshes can be separately downloaded at [watertight
 
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/kulits/BrickNet/master/docs/images/collider_catalog.avif" width="100%">
+<img src="https://raw.githubusercontent.com/kulits/BrickNet/master/docs/images/collider_catalog.avif" width="800">
 
 </div>
 
