@@ -41,6 +41,17 @@ The non-decomposed watertight meshes can be separately downloaded at [watertight
 
 </div>
 
+### 26-08-19 -- BrickNet-Render
+
+We released [BrickNet-Render](https://github.com/kulits/BrickNet-Render), which turns LDraw assemblies into Blender scenes
+for rendering. See [Rendering](#rendering).
+
+<div align="center">
+
+<img src="https://raw.githubusercontent.com/kulits/BrickNet/master/docs/images/bricknet_render_mosaic.avif" width="800">
+
+</div>
+
 ## Install
 
 ```bash
