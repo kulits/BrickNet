@@ -14,6 +14,17 @@ CVPR 2026
 
 ## Updates
 
+### 26-11-12 -- BrickFlow
+
+We released [BrickFlow](https://kulits.github.io/BrickFlow/) (NeurIPS 2026), which trains an SE(3) flow-matching model
+to reconstruct LEGO assemblies from an image.
+
+<div align="center">
+
+<img src="https://kulits.github.io/BrickFlow/assets/teaser_truck.avif" width="800">
+
+</div>
+
 ### 26-10-08 -- BrickBench
 
 We released [BrickBench](https://brickben.ch/) and [BrickAgent](https://github.com/kulits/BrickAgent), a benchmark and
